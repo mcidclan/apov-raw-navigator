@@ -1,0 +1,20 @@
+BIN = ./bin/
+EXE = apov-cross-reader.exe
+OBJS = main.o render.o
+OBJS := $(addprefix $(BIN), $(OBJS))
+
+CXFLAGS = -Wpadded -Wpacked -Wall -m32
+LDFLAGS = -lopengl32 -lfreeglut -lstdc++
+
+all: $(BIN)$(EXE)
+
+$(BIN)$(EXE): $(OBJS)
+	gcc -o $@ $^ $(LDFLAGS)
+
+$(BIN)%.o: %.cpp
+	gcc -o $@ -c $< $(CXFLAGS)
+    
+clean:
+	powershell " Remove-Item ./bin/*.o"
+	powershell " Remove-Item ./bin/*.exe"
+    

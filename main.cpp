@@ -11,14 +11,16 @@ void reshape(int width, int height) {
 void specialKeyDown(int key, int x, int y) {
     switch (key) {
         case GLUT_KEY_DOWN:
-            render::moveZ(-1);
-            break;
-        case GLUT_KEY_LEFT:
+            render::move(-1);
             break;
 	    case GLUT_KEY_UP:
-            render::moveZ(1);
+            render::move(1);
+            break;
+        case GLUT_KEY_LEFT:
+            render::rotate(-1);
             break;
 	    case GLUT_KEY_RIGHT:
+            render::rotate(1);
             break;
     }
 }
@@ -26,26 +28,31 @@ void specialKeyDown(int key, int x, int y) {
 void specialKeyUp(int key, int x, int y) {
     switch (key) {    
 	    case GLUT_KEY_UP:
-            render::moveZ(0);
+            render::move(0);
             break;
 	    case GLUT_KEY_DOWN:
-            render::moveZ(0);
+            render::move(0);
             break;
 	    case GLUT_KEY_LEFT:
+            render::rotate(0);
             break;
 	    case GLUT_KEY_RIGHT:
+            render::rotate(0);
             break;
     }
 }
 
 
 int main(int argc, char** argv) {
+    Options::init(argc, argv);
+    render::init();
+    
     glutInit(&argc, argv);
 	glutInitWindowPosition(0, 0);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE);
-	glutInitWindowSize(WIN_WIDTH, WIN_HEIGHT);
-    glutCreateWindow("apov-cross-reader");
-    render::init();
+	glutInitWindowSize(render::_win_width(), render::_win_height());
+    glutCreateWindow("apov-raw-navigator");
+    render::initGl();
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutSpecialFunc(specialKeyDown);

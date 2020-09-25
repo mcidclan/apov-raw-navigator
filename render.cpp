@@ -1,25 +1,57 @@
 #include "./headers/render.hpp"
 
 namespace render {
-    static u32 move = 0;
-    static u32 moveStep = 0;
-    //static bool filled = false;
+    static u16 WIN_WIDTH;
+    static u16 WIN_HEIGHT;
+    static u16 WIN_WIDTH_D2;
+    static u16 WIN_HEIGHT_D2;
+    static u32 WIN_PIXELS_COUNT;
+    static u32 WIN_BYTES_COUNT;
+    static u32 VIEW_BYTES_COUNT;
+    static u32 SPACE_BYTES_COUNT;
     
-    static u8 view[VIEW_BYTES_COUNT] = {0};
+    // Todo
+    static int _move = 0;
+    static int _rotate = 0;
+    static int moveStep = 0;
+    static int rotateStep = 0;
+    
+    static u32* view;
     static u8* pixels;
     static GLuint surface;
     static GLuint texture;
-
-    void moveZ(const int step, bool set) {
+    
+    int _win_width() {
+        return WIN_WIDTH;
+    }
+    
+    int _win_height() {
+        return WIN_HEIGHT;
+    }
+    
+    void rotate(const int step, bool set) {
+        if(set) {
+            rotateStep = step;
+        } else {
+            _rotate = _rotate + rotateStep;
+            if(_rotate < 0) {
+                _rotate = Options::ATOMIC_POV_COUNT - 1;
+            } else if(_rotate >= Options::ATOMIC_POV_COUNT) {
+                _rotate = 0;
+            }
+        }
+    }
+    
+    void move(const int step, bool set) {
         if(set) {
             moveStep = step;
         } else {
-            move+=moveStep;
-            if(move < 0) {
-                move = 0;
+            _move+=moveStep;
+            if(_move < 0) {
+                _move = 0;
             }
-            if(move > 511) {
-                move = 511;
+            if(_move > Options::SPACE_SIZE - 1) {
+                _move = Options::SPACE_SIZE -1;
             }
         }
     }
@@ -58,30 +90,27 @@ namespace render {
         glEndList();
     }
 
-    void init() {
+    void initGl() {
         glEnable(GL_CULL_FACE);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         initSurface();
     }
-
+    
     static void getView() {
-        //if(!filled) {
-            FILE* f = fopen("atoms.bin", "r");
-            fseek(f, VIEW_BYTES_COUNT * move, SEEK_SET);
-            fread(view, sizeof(Atom), WIN_PIXELS_COUNT, f);
-            fclose(f);
-            
-            u32 step = WIN_PIXELS_COUNT;
-            while(--step) {
-                const u32 poffset = step * 3;
-                const u32 voffset = step * 4;
-                pixels[poffset + 0] = view[voffset + 3];
-                pixels[poffset + 1] = view[voffset + 2];
-                pixels[poffset + 2] = view[voffset + 1];
-            }
-        //}
-        //memset(pixels, 0x40, WIN_BYTES_COUNT);
-        moveZ(0, false);
+        FILE* f = fopen("atoms.bin", "r");
+        fseek(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
+        fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
+        fclose(f);
+        
+        u32 step = WIN_PIXELS_COUNT;
+        while(step--) {
+            const u32 poffset = step * 3;
+            pixels[poffset + 0] = (view[step] & 0xFF000000) >> 24;
+            pixels[poffset + 1] = (view[step] & 0x00FF0000) >> 16;
+            pixels[poffset + 2] = (view[step] & 0x0000FF00) >> 8;
+        }
+        move(0, false);
+        rotate(0, false);
     }
     
     void display() {
@@ -96,5 +125,18 @@ namespace render {
         glCallList(surface);
         glutSwapBuffers();
         glutPostRedisplay();
+    }
+    
+    void init() {
+        WIN_WIDTH = WIN_HEIGHT = Options::SPACE_SIZE;
+        WIN_WIDTH_D2 = WIN_WIDTH / 2;
+        WIN_HEIGHT_D2 = WIN_HEIGHT / 2;
+        WIN_PIXELS_COUNT = WIN_WIDTH * WIN_HEIGHT;
+        WIN_BYTES_COUNT = WIN_PIXELS_COUNT * COLOR_BYTES_COUNT;
+        VIEW_BYTES_COUNT = WIN_PIXELS_COUNT * sizeof(u32);
+        SPACE_BYTES_COUNT = Options::SPACE_SIZE * VIEW_BYTES_COUNT;        
+        
+        view = new u32[WIN_PIXELS_COUNT];
+        memset(view, 0xFF, sizeof(u32)*WIN_PIXELS_COUNT);
     }
 }

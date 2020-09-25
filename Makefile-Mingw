@@ -1,6 +1,6 @@
 BIN = ./bin/
-EXE = apov-cross-reader.exe
-OBJS = main.o render.o
+EXE = apov-raw-navigator.exe
+OBJS = options.o main.o render.o
 OBJS := $(addprefix $(BIN), $(OBJS))
 
 CXFLAGS = -Wpadded -Wpacked -Wall -m32

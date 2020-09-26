@@ -3,8 +3,8 @@ EXE = apov-raw-navigator.exe
 OBJS = options.o main.o render.o
 OBJS := $(addprefix $(BIN), $(OBJS))
 
-CXFLAGS = -Wpadded -Wpacked -Wall -m32
-LDFLAGS = -lopengl32 -lfreeglut -lstdc++
+CXFLAGS = -Wpadded -Wpacked -Wall
+LDFLAGS = $(CXFLAGS) -lopengl32 -lfreeglut -lstdc++
 
 all: $(BIN)$(EXE)
 

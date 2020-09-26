@@ -42,6 +42,12 @@ void specialKeyUp(int key, int x, int y) {
     }
 }
 
+void timer(int value) {
+    render::move(0, false);
+    render::rotate(0, false);
+	glutPostRedisplay();
+	glutTimerFunc(1000/60, timer, value);
+}
 
 int main(int argc, char** argv) {
     Options::init(argc, argv);
@@ -57,6 +63,7 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshape);
     glutSpecialFunc(specialKeyDown);
     glutSpecialUpFunc(specialKeyUp);
+    timer(0);
     glutMainLoop();
     return 0;
 }

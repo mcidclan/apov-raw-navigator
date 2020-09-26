@@ -97,6 +97,46 @@ namespace render {
         initSurface();
     }
     
+    static void filterGaps() {
+        int x = WIN_WIDTH - 1;
+        while(--x) {
+            int y = WIN_HEIGHT - 1;
+            while(--y) {
+                const u32 _y = y * WIN_WIDTH;
+                const u32 poffseta = (x - 1 + _y) * 3;
+                const u32 poffsetb = (x + _y) * 3;
+                const u32 poffsetc = (x + 1 + _y) * 3;
+                
+                const u32 poffsetd = (x + _y - WIN_WIDTH) * 3;
+                const u32 poffsete = (x + _y + WIN_WIDTH) * 3;
+                
+                const u8 pa0 = pixels[poffseta + 0];
+                const u8 pa1 = pixels[poffseta + 1];
+                const u8 pa2 = pixels[poffseta + 2];
+                
+                u8* const pb0 = &pixels[poffsetb + 0];
+                u8* const pb1 = &pixels[poffsetb + 1];
+                u8* const pb2 = &pixels[poffsetb + 2];
+                
+                const u8 pc0 = pixels[poffsetc + 0];
+                const u8 pc1 = pixels[poffsetc + 1];
+                const u8 pc2 = pixels[poffsetc + 2];
+                
+                if((pa0 + pa1 + pa2) && !(*pb0 + *pb1 + *pb2) && (pc0 + pc1 + pc2)) {
+                    *pb0 = (pixels[poffseta + 0] + pixels[poffsetc + 0]) / 2;
+                    *pb1 = (pixels[poffseta + 1] + pixels[poffsetc + 1]) / 2;
+                    *pb2 = (pixels[poffseta + 2] + pixels[poffsetc + 2]) / 2;
+                }
+                
+                if(*pb0 == 0 && *pb1 == 0 && *pb2 == 0) {
+                    *pb0 = (pixels[poffsetd + 0] + pixels[poffsete + 0]) / 2;
+                    *pb1 = (pixels[poffsetd + 1] + pixels[poffsete + 1]) / 2;
+                    *pb2 = (pixels[poffsetd + 2] + pixels[poffsete + 2]) / 2;
+                }
+            }
+        }
+    }
+    
     static void getView() {
         FILE* f = fopen("atoms.bin", "r");
         fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
@@ -143,6 +183,7 @@ namespace render {
     
     void display() {
         getView();
+        filterGaps();
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
@@ -152,7 +193,6 @@ namespace render {
         glLoadIdentity();
         glCallList(surface);
         glutSwapBuffers();
-        //glutPostRedisplay();
     }
     
     void init() {

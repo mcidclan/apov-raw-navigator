@@ -19,6 +19,9 @@
         public:
         static int SPACE_SIZE;
         static int ATOMIC_POV_COUNT;
+        static int RAY_STEP;
+        
+        static float MAX_PROJECTION_DEPTH;
         //
         static void init(int argc, char **argv);
     };

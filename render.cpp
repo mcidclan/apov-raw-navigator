@@ -51,8 +51,8 @@ namespace render {
             if(_move < 0) {
                 _move = 0;
             }
-            if(_move > Options::SPACE_SIZE - 1) {
-                _move = Options::SPACE_SIZE - 1;
+            if(_move > (Options::SPACE_SIZE / Options::RAY_STEP) - 1) {
+                _move = (Options::SPACE_SIZE / Options::RAY_STEP) - 1;
             }
         }
     }
@@ -153,7 +153,7 @@ namespace render {
                 const u32 step = x + y * WIN_WIDTH;
                 
                 const float depth = (float)((u8)(view[step] & 0x000000FF));
-                const float f = (1.0f - depth / MAX_PROJECTION_DEPTH);
+                const float f = (1.0f - depth / Options::MAX_PROJECTION_DEPTH);
                 const int _x = (x - WIN_WIDTH_D2) * f;
                 const int _y = (y - WIN_HEIGHT_D2) * f;
                 
@@ -202,7 +202,7 @@ namespace render {
         WIN_PIXELS_COUNT = WIN_WIDTH * WIN_HEIGHT;
         WIN_BYTES_COUNT = WIN_PIXELS_COUNT * COLOR_BYTES_COUNT;
         VIEW_BYTES_COUNT = WIN_PIXELS_COUNT * sizeof(u32);
-        SPACE_BYTES_COUNT = Options::SPACE_SIZE * VIEW_BYTES_COUNT;        
+        SPACE_BYTES_COUNT = (Options::SPACE_SIZE / Options::RAY_STEP) * VIEW_BYTES_COUNT;        
         
         view = new u32[WIN_PIXELS_COUNT];
         zvalues = new u8[WIN_PIXELS_COUNT];

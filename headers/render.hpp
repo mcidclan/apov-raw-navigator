@@ -3,7 +3,7 @@
     
     #include "options.hpp"
     
-    #define MAX_RAY_DEPTH 64
+    //#define MAX_RAY_DEPTH 64
     //#define MAX_PROJECTION_DEPTH 300.0f
     #define COLOR_BYTES_COUNT 3
     

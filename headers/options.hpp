@@ -20,8 +20,9 @@
         static int SPACE_SIZE;
         static int ATOMIC_POV_COUNT;
         static int RAY_STEP;
-        
+        static u32 MAX_RAY_DEPTH;
         static float MAX_PROJECTION_DEPTH;
+        static bool CAM_HEMISPHERE;
         //
         static void init(int argc, char **argv);
     };

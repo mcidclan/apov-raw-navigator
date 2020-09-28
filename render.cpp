@@ -1,15 +1,18 @@
 #include "./headers/render.hpp"
 
 namespace render {
+    static const float RAD_ANGLE = M_PI / 180.0f;
+    
     static u16 WIN_WIDTH;
     static u16 WIN_HEIGHT;
     static u16 WIN_WIDTH_D2;
     static u16 WIN_HEIGHT_D2;
+    static u16 WIN_WIDTH_D4;
     static u32 WIN_PIXELS_COUNT;
     static u32 WIN_BYTES_COUNT;
     static u32 VIEW_BYTES_COUNT;
     static uint64_t SPACE_BYTES_COUNT;
-    
+    static float ATOMIC_POV_STEP;
     // Todo
     static int _move = 0;
     static int _rotate = 0;
@@ -137,6 +140,18 @@ namespace render {
         }
     }
     
+    static float translateX(const float x) {
+        if(!Options::CAM_LOCKED) {
+            float angle = _rotate * ATOMIC_POV_STEP + 90.0f;
+            if(Options::CAM_HEMISPHERE && angle > 90.0f) {
+                angle += 180.0f;
+            }
+            angle *= RAD_ANGLE;
+            return x - cosf(angle) * WIN_WIDTH_D2;
+        }
+        return x;
+    }
+    
     static void getView() {
         FILE* f = fopen("atoms.bin", "r");
         fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
@@ -153,29 +168,31 @@ namespace render {
                 const u32 step = x + y * WIN_WIDTH;
                 
                 const float depth = (float)((u8)(view[step] & 0x000000FF));
-                const float f = (1.0f - depth / Options::MAX_PROJECTION_DEPTH);
-                const int _x = (x - WIN_WIDTH_D2) * f;
-                const int _y = (y - WIN_HEIGHT_D2) * f;
+                const float s = (1.0f - depth / Options::MAX_PROJECTION_DEPTH);
+                const int _x = translateX((x - WIN_WIDTH_D2) * s);
+                const int _y = (y - WIN_HEIGHT_D2) * s;
                 
-                const u32 pstep = ((_x + WIN_WIDTH_D2) + ((_y + WIN_HEIGHT_D2) * WIN_WIDTH));
-                const u32 poffset = pstep * 3;
-                
-                u8* const px0 = &pixels[poffset + 0];
-                u8* const px1 = &pixels[poffset + 1];
-                u8* const px2 = &pixels[poffset + 2];
-                
-                const u8 v0 = (view[step] & 0xFF000000) >> 24;
-                const u8 v1 = (view[step] & 0x00FF0000) >> 16;
-                const u8 v2 = (view[step] & 0x0000FF00) >> 8;
+                if(_x >= -WIN_WIDTH_D2 && _x < WIN_WIDTH_D2 && _y >= -WIN_HEIGHT_D2 && _y < WIN_HEIGHT_D2) {
+                    const u32 pstep = ((_x + WIN_WIDTH_D2) + ((_y + WIN_HEIGHT_D2) * WIN_WIDTH));
+                    const u32 poffset = pstep * 3;
+                    
+                    u8* const px0 = &pixels[poffset + 0];
+                    u8* const px1 = &pixels[poffset + 1];
+                    u8* const px2 = &pixels[poffset + 2];
+                    
+                    const u8 v0 = (view[step] & 0xFF000000) >> 24;
+                    const u8 v1 = (view[step] & 0x00FF0000) >> 16;
+                    const u8 v2 = (view[step] & 0x0000FF00) >> 8;
 
-                if(
-                    (*px0 == 0 && *px1 == 0 && *px2 == 0) ||
-                    ((depth <= zvalues[pstep]) && (v0 != 0 || v1 != 0 || v2 != 0))
-                ) {
-                    *px0 = v0;
-                    *px1 = v1;
-                    *px2 = v2;
-                    zvalues[pstep] = depth;
+                    if(
+                        (*px0 == 0 && *px1 == 0 && *px2 == 0) ||
+                        ((depth <= zvalues[pstep]) && (v0 != 0 || v1 != 0 || v2 != 0))
+                    ) {
+                        *px0 = v0;
+                        *px1 = v1;
+                        *px2 = v2;
+                        zvalues[pstep] = depth;
+                    }
                 }
             }
         }
@@ -196,9 +213,11 @@ namespace render {
     }
     
     void init() {
+        ATOMIC_POV_STEP = 360.0f / Options::ATOMIC_POV_COUNT;
         WIN_WIDTH = WIN_HEIGHT = Options::SPACE_SIZE;
         WIN_WIDTH_D2 = WIN_WIDTH / 2;
         WIN_HEIGHT_D2 = WIN_HEIGHT / 2;
+        WIN_WIDTH_D4 = WIN_WIDTH_D2 / 2;
         WIN_PIXELS_COUNT = WIN_WIDTH * WIN_HEIGHT;
         WIN_BYTES_COUNT = WIN_PIXELS_COUNT * COLOR_BYTES_COUNT;
         VIEW_BYTES_COUNT = WIN_PIXELS_COUNT * sizeof(u32);

@@ -10,6 +10,7 @@ int Options::ATOMIC_POV_COUNT = 360;
 int Options::RAY_STEP = 1;
 u32 Options::MAX_RAY_DEPTH = 64;
 bool Options::CAM_HEMISPHERE = false;
+bool Options::CAM_LOCKED = false;
 
 float Options::MAX_PROJECTION_DEPTH = 300.0f;
 
@@ -29,6 +30,8 @@ void Options::init(int argc, char **argv) {
             Options::MAX_PROJECTION_DEPTH = (float)std::stoi(name.substr(17));
         } else if(name.find("cam-hemisphere") == 0) {
             Options::CAM_HEMISPHERE = true;
+        } else if(name.find("cam-locked") == 0) {
+            Options::CAM_LOCKED = true;
         }
         i++;
     }

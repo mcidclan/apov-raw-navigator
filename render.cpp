@@ -190,7 +190,7 @@ namespace render {
     static void getView() {
         // Fake stream
         FILE* f = fopen64("atoms.bin", "r");
-        fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_END);
+        fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
         fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
         fclose(f);
         

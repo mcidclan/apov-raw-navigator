@@ -11,7 +11,7 @@ int Options::RAY_STEP = 1;
 u32 Options::MAX_RAY_DEPTH = 64;
 bool Options::CAM_HEMISPHERE = false;
 bool Options::CAM_LOCKED = false;
-
+bool Options::SMOOTH_PIXELS = false;
 float Options::MAX_PROJECTION_DEPTH = 300.0f;
 
 void Options::init(int argc, char **argv) {
@@ -32,6 +32,8 @@ void Options::init(int argc, char **argv) {
             Options::CAM_HEMISPHERE = true;
         } else if(name.find("cam-locked") == 0) {
             Options::CAM_LOCKED = true;
+        } else if(name.find("smooth-pixels") == 0) {
+            Options::SMOOTH_PIXELS = true;
         }
         i++;
     }

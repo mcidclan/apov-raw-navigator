@@ -20,6 +20,7 @@ namespace render {
     static int rotateStep = 0;
     
     static u32* view;
+    static u8* fbuff;
     static u8* pixels;
     static u8* zvalues;
     static GLuint surface;
@@ -74,12 +75,20 @@ namespace render {
     static void initSurface() {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         pixels = (u8*)malloc(WIN_BYTES_COUNT);
+        fbuff = (u8*)malloc(WIN_BYTES_COUNT);
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        if(Options::SMOOTH_PIXELS)
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        } else
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIN_WIDTH, WIN_HEIGHT,
         0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         
@@ -100,41 +109,67 @@ namespace render {
         initSurface();
     }
     
-    static void filterGaps() {
-        int x = WIN_WIDTH - 1;
-        while(--x) {
-            int y = WIN_HEIGHT - 1;
-            while(--y) {
-                const u32 _y = y * WIN_WIDTH;
-                const u32 poffseta = (x - 1 + _y) * 3;
-                const u32 poffsetb = (x + _y) * 3;
-                const u32 poffsetc = (x + 1 + _y) * 3;
+    static void filterGap(const u32* const p) {
+        const u8 pa[3] = {pixels[p[0] + 0], pixels[p[0] + 1], pixels[p[0] + 2]};
+        const u8 pb[3] = {pixels[p[1] + 0], pixels[p[1] + 1], pixels[p[1] + 2]};
+        const u8 pc[3] = {pixels[p[2] + 0], pixels[p[2] + 1], pixels[p[2] + 2]};
+        const u8 pd[3] = {pixels[p[3] + 0], pixels[p[3] + 1], pixels[p[3] + 2]};
+        u8* const pe[3] = {&fbuff[p[4] + 0], &fbuff[p[4] + 1], &fbuff[p[4] + 2]};
+        const u8 pf[3] = {pixels[p[5] + 0], pixels[p[5] + 1], pixels[p[5] + 2]};
+        const u8 pg[3] = {pixels[p[6] + 0], pixels[p[6] + 1], pixels[p[6] + 2]};
+        const u8 ph[3] = {pixels[p[7] + 0], pixels[p[7] + 1], pixels[p[7] + 2]};
+        const u8 pi[3] = {pixels[p[8] + 0], pixels[p[8] + 1], pixels[p[8] + 2]};
+        
+        const u8 a = (pa[0] | pa[1] | pa[2]) ? 1 : 0;
+        const u8 b = (pb[0] | pb[1] | pb[2]) ? 1 : 0;
+        const u8 c = (pc[0] | pc[1] | pc[2]) ? 1 : 0;
+        const u8 d = (pd[0] | pd[1] | pd[2]) ? 1 : 0;
+        const u8 e = (*pe[0] | *pe[1] | *pe[2]) ? 1 : 0;
+        const u8 f = (pf[0] | pf[1] | pf[2]) ? 1 : 0;
+        const u8 g = (pg[0] | pg[1] | pg[2]) ? 1 : 0;
+        const u8 h = (ph[0] | ph[1] | ph[2]) ? 1 : 0;
+        const u8 i = (pi[0] | pi[1] | pi[2]) ? 1 : 0;
                 
-                const u32 poffsetd = (x + _y - WIN_WIDTH) * 3;
-                const u32 poffsete = (x + _y + WIN_WIDTH) * 3;
-                
-                const u8 pa0 = pixels[poffseta + 0];
-                const u8 pa1 = pixels[poffseta + 1];
-                const u8 pa2 = pixels[poffseta + 2];
-                
-                u8* const pb0 = &pixels[poffsetb + 0];
-                u8* const pb1 = &pixels[poffsetb + 1];
-                u8* const pb2 = &pixels[poffsetb + 2];
-                
-                const u8 pc0 = pixels[poffsetc + 0];
-                const u8 pc1 = pixels[poffsetc + 1];
-                const u8 pc2 = pixels[poffsetc + 2];
-                
-                if((pa0 + pa1 + pa2) && !(*pb0 + *pb1 + *pb2) && (pc0 + pc1 + pc2)) {
-                    *pb0 = (pixels[poffseta + 0] + pixels[poffsetc + 0]) / 2;
-                    *pb1 = (pixels[poffseta + 1] + pixels[poffsetc + 1]) / 2;
-                    *pb2 = (pixels[poffseta + 2] + pixels[poffsetc + 2]) / 2;
+        if((a || b || c || d) && !e && (f || g || h || i)) {
+            const u8 n = a + b + c + d + f  + g + h + i;
+            *pe[0] = (pa[0] + pb[0] + pc[0] + pd[0] + pf[0] + pg[0] + ph[0] + pi[0]) / n;
+            *pe[1] = (pa[1] + pb[1] + pc[1] + pd[1] + pf[1] + pg[1] + ph[1] + pi[1]) / n;
+            *pe[2] = (pa[2] + pb[2] + pc[2] + pd[2] + pf[2] + pg[2] + ph[2] + pi[2]) / n;
+        }
+    }
+    
+    static void filterGaps(const u8 pass) {
+        memset(fbuff, 0x00, WIN_BYTES_COUNT);
+        u8 p = pass;
+        while(p--) {
+            int x = WIN_WIDTH - 1;
+            while(--x > 1) {
+                int y = WIN_HEIGHT - 1;
+                while(--y > 1) {
+                    const u32 _y = y * WIN_WIDTH;
+                    
+                    const u32 gx[9] = {
+                        (x - 1 + _y - WIN_WIDTH) * 3, //a
+                        (x - 1 + _y            ) * 3, //b
+                        (x - 1 + _y + WIN_WIDTH) * 3, //c
+                        
+                        (x + _y - WIN_WIDTH) * 3, //d
+                        (x + _y            ) * 3, //e
+                        (x + _y + WIN_WIDTH) * 3, //f
+                        
+                        (x + 1 + _y - WIN_WIDTH) * 3, //g
+                        (x + 1 + _y            ) * 3, //h
+                        (x + 1 + _y + WIN_WIDTH) * 3 //i
+                    };
+                    
+                    filterGap(gx);
                 }
-                
-                if(*pb0 == 0 && *pb1 == 0 && *pb2 == 0) {
-                    *pb0 = (pixels[poffsetd + 0] + pixels[poffsete + 0]) / 2;
-                    *pb1 = (pixels[poffsetd + 1] + pixels[poffsete + 1]) / 2;
-                    *pb2 = (pixels[poffsetd + 2] + pixels[poffsete + 2]) / 2;
+            }
+        
+            u32 i = WIN_BYTES_COUNT;
+            while(i--) {
+                if(fbuff[i]) {
+                    pixels[i] = fbuff[i];
                 }
             }
         }
@@ -167,8 +202,8 @@ namespace render {
             while(y--) {
                 const u32 step = x + y * WIN_WIDTH;
                 
-                const float depth = (float)((u8)(view[step] & 0x000000FF));
-                const float s = (1.0f - depth / Options::MAX_PROJECTION_DEPTH);
+                const u8 depth = (u8)(view[step] & 0x000000FF);
+                const float s = 1.0f - (float)depth / Options::MAX_PROJECTION_DEPTH;
                 const int _x = translateX((x - WIN_WIDTH_D2) * s);
                 const int _y = (y - WIN_HEIGHT_D2) * s;
                 
@@ -185,8 +220,8 @@ namespace render {
                     const u8 v2 = (view[step] & 0x0000FF00) >> 8;
 
                     if(
-                        (*px0 == 0 && *px1 == 0 && *px2 == 0) ||
-                        ((depth <= zvalues[pstep]) && (v0 != 0 || v1 != 0 || v2 != 0))
+                        (v0 != 0 || v1 != 0 || v2 != 0) &&
+                        ((*px0 == 0 && *px1 == 0 && *px2 == 0) || (depth < zvalues[pstep]))
                     ) {
                         *px0 = v0;
                         *px1 = v1;
@@ -200,7 +235,7 @@ namespace render {
     
     void display() {
         getView();
-        filterGaps();
+        filterGaps(1);
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
@@ -208,6 +243,7 @@ namespace render {
         WIN_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+        //glScalef(2.0f, 2.0f, 1.0f);
         glCallList(surface);
         glutSwapBuffers();
     }
@@ -226,6 +262,5 @@ namespace render {
         view = new u32[WIN_PIXELS_COUNT];
         zvalues = new u8[WIN_PIXELS_COUNT];
         memset(view, 0x00, sizeof(u32)*WIN_PIXELS_COUNT);
-        memset(zvalues, 0x00, sizeof(u8)*WIN_PIXELS_COUNT);
     }
 }

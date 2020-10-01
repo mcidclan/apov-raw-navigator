@@ -24,6 +24,7 @@
         static float MAX_PROJECTION_DEPTH;
         static bool CAM_LOCKED;
         static bool CAM_HEMISPHERE;
+        static bool SMOOTH_PIXELS;
         //
         static void init(int argc, char **argv);
     };

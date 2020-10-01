@@ -9,15 +9,17 @@
         #include <GL/glut.h>
         #include <pspkernel.h>
         #include <pspctrl.h>
+        #include <psppower.h>
+        #include <libc/stdio.h>
         #define M_PI 3.14159265358979323846
     #else
         #include <GL/freeglut.h>
+        #include <cstdio>
     #endif
     
     #include <cmath>
     #include <cstdlib>
     #include <cstring>
-    #include <cstdio>
     #include <string>
     
         // Types

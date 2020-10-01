@@ -18,6 +18,10 @@
             if(pad.Buttons & PSP_CTRL_DOWN) {
                 render::move(-1);
             }
+            if(!pad.Buttons) {
+                render::move(0);
+                render::rotate(0);
+            }
             sceKernelDelayThread(10000);
         }
     }
@@ -96,6 +100,7 @@ int main(int argc, char** argv) {
         glutSpecialUpFunc(specialKeyUp);
         timer(0);
     #else
+        scePowerSetClockFrequency(333, 333, 167);
         SceUID id = sceKernelCreateThread("apov_key", key, 0x10, 0x1000, 0, 0);
         if (id >= 0){
             sceKernelStartThread(id, 0, 0);

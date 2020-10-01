@@ -188,17 +188,11 @@ namespace render {
     }
     
     static void getView() {
-        #ifndef PSP
-            FILE* f = fopen("atoms.bin", "r");
-            fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
-            fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
-            fclose(f);
-        #else
-            SceUID f = sceIoOpen("atoms.bin", PSP_O_RDONLY, 0777);
-            sceIoLseek(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
-            sceIoRead(f, view, WIN_PIXELS_COUNT * sizeof(u32));
-            sceIoClose(f);
-        #endif
+        // Fake stream
+        FILE* f = fopen64("atoms.bin", "r");
+        fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_END);
+        fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
+        fclose(f);
         
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         memset(zvalues, 0x00, WIN_PIXELS_COUNT);

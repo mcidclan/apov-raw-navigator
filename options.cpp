@@ -41,9 +41,9 @@ void Options::init(int argc, char **argv) {
     #else
         // ToDo: To be loaded from options.cnf
         Options::SPACE_SIZE = 256;
-        Options::ATOMIC_POV_COUNT = 180;
-        Options::RAY_STEP = 2;
-        Options::MAX_RAY_DEPTH = 128;
+        Options::ATOMIC_POV_COUNT = 90;//180;
+        Options::RAY_STEP = 4; //2;
+        Options::MAX_RAY_DEPTH = 192;//128;
         Options::CAM_HEMISPHERE = false;
         Options::CAM_LOCKED = true;
         Options::SMOOTH_PIXELS = false;

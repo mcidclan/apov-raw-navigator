@@ -8,13 +8,13 @@ OBJS = $(strip $(sort $(OBJ:%.o=$(PATHOBJS)%.o)))
 
 
 CFLAGS = -fsingle-precision-constant -Wall -O2 -g0 -DPSP -fno-exceptions \
-    -I$(PSPSDK)/../include
+    -I$(PSPSDK)/include
 CXXFLAGS = $(CFLAGS) -fno-rtti -std=c++11
 
 PSPBIN = $(PSPSDK)/../bin
 
 LIBS +=  -lglut -lGLU -lGL \
-	-lz -lm -lpspvfpu -lpsprtc -lpsppower -lstdc++
+	-lpsplibc -lz -lm -lpspvfpu -lpsprtc -lpsppower -lstdc++
 
 LDFLAGS += ./psp/backthreads.c
 

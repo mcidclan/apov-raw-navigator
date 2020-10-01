@@ -1,4 +1,4 @@
-# Atomic Point of View | generator
+# Atomic Point of View | navigator
 ```
 Nom de code: APoV.
 

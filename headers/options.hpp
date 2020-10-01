@@ -4,8 +4,18 @@
  */
 
 #ifndef OPTIONS_HPP
-#define OPTIONS_HPP
-    #include <GL/freeglut.h>
+#define OPTIONS_HPP    
+    #ifdef PSP
+        #include <GL/glut.h>
+        #include <pspkernel.h>
+        #include <pspctrl.h>
+        #define M_PI 3.14159265358979323846
+    #else
+        #include <GL/freeglut.h>
+    #endif
+    
+    #include <cmath>
+    #include <cstdlib>
     #include <cstring>
     #include <cstdio>
     #include <string>

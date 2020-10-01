@@ -89,8 +89,8 @@ namespace render {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIN_WIDTH, WIN_HEIGHT,
-        0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIN_WIDTH, WIN_HEIGHT,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         
         surface = glGenLists(1);
         glNewList(surface, GL_COMPILE);
@@ -149,17 +149,17 @@ namespace render {
                     const u32 _y = y * WIN_WIDTH;
                     
                     const u32 gx[9] = {
-                        (x - 1 + _y - WIN_WIDTH) * 3, //a
-                        (x - 1 + _y            ) * 3, //b
-                        (x - 1 + _y + WIN_WIDTH) * 3, //c
+                        (x - 1 + _y - WIN_WIDTH) * COLOR_BYTES_COUNT, //a
+                        (x - 1 + _y            ) * COLOR_BYTES_COUNT, //b
+                        (x - 1 + _y + WIN_WIDTH) * COLOR_BYTES_COUNT, //c
                         
-                        (x + _y - WIN_WIDTH) * 3, //d
-                        (x + _y            ) * 3, //e
-                        (x + _y + WIN_WIDTH) * 3, //f
+                        (x + _y - WIN_WIDTH) * COLOR_BYTES_COUNT, //d
+                        (x + _y            ) * COLOR_BYTES_COUNT, //e
+                        (x + _y + WIN_WIDTH) * COLOR_BYTES_COUNT, //f
                         
-                        (x + 1 + _y - WIN_WIDTH) * 3, //g
-                        (x + 1 + _y            ) * 3, //h
-                        (x + 1 + _y + WIN_WIDTH) * 3 //i
+                        (x + 1 + _y - WIN_WIDTH) * COLOR_BYTES_COUNT, //g
+                        (x + 1 + _y            ) * COLOR_BYTES_COUNT, //h
+                        (x + 1 + _y + WIN_WIDTH) * COLOR_BYTES_COUNT //i
                     };
                     
                     filterGap(gx);
@@ -188,10 +188,17 @@ namespace render {
     }
     
     static void getView() {
-        FILE* f = fopen("atoms.bin", "r");
-        fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
-        fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
-        fclose(f);
+        #ifndef PSP
+            FILE* f = fopen("atoms.bin", "r");
+            fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
+            fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
+            fclose(f);
+        #else
+            SceUID f = sceIoOpen("atoms.bin", PSP_O_RDONLY, 0777);
+            sceIoLseek(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
+            sceIoRead(f, view, WIN_PIXELS_COUNT * sizeof(u32));
+            sceIoClose(f);
+        #endif
         
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         memset(zvalues, 0x00, WIN_PIXELS_COUNT);
@@ -209,11 +216,12 @@ namespace render {
                 
                 if(_x >= -WIN_WIDTH_D2 && _x < WIN_WIDTH_D2 && _y >= -WIN_HEIGHT_D2 && _y < WIN_HEIGHT_D2) {
                     const u32 pstep = ((_x + WIN_WIDTH_D2) + ((_y + WIN_HEIGHT_D2) * WIN_WIDTH));
-                    const u32 poffset = pstep * 3;
+                    const u32 poffset = pstep * COLOR_BYTES_COUNT;
                     
                     u8* const px0 = &pixels[poffset + 0];
                     u8* const px1 = &pixels[poffset + 1];
                     u8* const px2 = &pixels[poffset + 2];
+                    u8* const px3 = &pixels[poffset + 3];
                     
                     const u8 v0 = (view[step] & 0xFF000000) >> 24;
                     const u8 v1 = (view[step] & 0x00FF0000) >> 16;
@@ -226,6 +234,7 @@ namespace render {
                         *px0 = v0;
                         *px1 = v1;
                         *px2 = v2;
+                        *px3 = 0xFF;
                         zvalues[pstep] = depth;
                     }
                 }
@@ -240,7 +249,7 @@ namespace render {
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIN_WIDTH,
-        WIN_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        WIN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         //glScalef(2.0f, 2.0f, 1.0f);

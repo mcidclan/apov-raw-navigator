@@ -1,10 +1,9 @@
 #ifndef APOV_RENDER_HPP
 #define APOV_RENDER_HPP
     
-    #include <cmath>
     #include "options.hpp"
-    #define COLOR_BYTES_COUNT 3
-    
+    #define COLOR_BYTES_COUNT 4
+     
     namespace render {
         int _win_width();
         int _win_height();

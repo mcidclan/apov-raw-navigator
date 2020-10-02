@@ -40,6 +40,7 @@
         static bool CAM_HEMISPHERE;
         static bool SMOOTH_PIXELS;
         static bool FILTER_GAPS;
+        static bool FILTER_GAPS_LITE;
         static float MAX_PROJECTION_DEPTH;
         //
         static void init(int argc, char **argv);

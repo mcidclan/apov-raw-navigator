@@ -13,6 +13,7 @@ bool Options::CAM_HEMISPHERE = false;
 bool Options::CAM_LOCKED = false;
 bool Options::SMOOTH_PIXELS = false;
 bool Options::FILTER_GAPS = false;
+bool Options::FILTER_GAPS_LITE = false;
 float Options::MAX_PROJECTION_DEPTH = 300.0f;
 
 void Options::init(int argc, char **argv) {
@@ -36,6 +37,9 @@ void Options::init(int argc, char **argv) {
                 Options::CAM_LOCKED = true;
             } else if(name.find("smooth-pixels") == 0) {
                 Options::SMOOTH_PIXELS = true;
+            } else if(name.find("filter-gaps-lite") == 0) {
+                Options::FILTER_GAPS = true;
+                Options::FILTER_GAPS_LITE = true;
             } else if(name.find("filter-gaps") == 0) {
                 Options::FILTER_GAPS = true;
             }
@@ -43,7 +47,6 @@ void Options::init(int argc, char **argv) {
         }
     #else
         // ToDo: To be loaded from atom.bin header
-        Options::FILTER_GAPS = false;
         Options::SPACE_SIZE = 256;
         Options::ATOMIC_POV_COUNT = 90;
         Options::RAY_STEP = 4;
@@ -51,7 +54,9 @@ void Options::init(int argc, char **argv) {
         Options::CAM_HEMISPHERE = false;
         Options::CAM_LOCKED = true;
         Options::SMOOTH_PIXELS = false;
-        Options::MAX_PROJECTION_DEPTH = 800.0f;
+        Options::FILTER_GAPS_LITE = true;
+        Options::FILTER_GAPS = true;
+        Options::MAX_PROJECTION_DEPTH = 700.0f;
     #endif
 
     if(Options::CAM_HEMISPHERE) {

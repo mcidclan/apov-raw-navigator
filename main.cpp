@@ -59,54 +59,51 @@
                 break;
         }
     }
+    
+    static void timer(int value) {
+        render::move(0, false);
+        render::rotate(0, false);
+        glutPostRedisplay();
+        glutTimerFunc(1000/60, timer, value);
+    }
 #endif
-
-static void redisplay() {
-    render::move(0, false);
-    render::rotate(0, false);
-	glutPostRedisplay();
-}
-
-static void timer(int value) {
-    redisplay();
-    glutTimerFunc(1000/60, timer, value);
-}
-
-static void display() {
-    render::display();
-    #ifdef PSP
-        redisplay();
-    #endif
-}
-
-static void reshape(int width, int height) {
-    render::reshape(width, height);
-}
 
 int main(int argc, char** argv) {
     #ifdef PSP
         pspDebugScreenInit();
         scePowerSetClockFrequency(333, 333, 166);
-        SceUID id = sceKernelCreateThread("apov_key", key, 0x10, 0x1000, 0, 0);
-        if (id >= 0){
-            sceKernelStartThread(id, 0, 0);
-        }
-    #endif 
+    #endif
+    
     Options::init(argc, argv);
     render::init();
+    
     glutInit(&argc, argv);
 	glutInitWindowPosition(0, 0);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE);
 	glutInitWindowSize(render::_win_width(), render::_win_height());
     glutCreateWindow("apov-raw-navigator");
+    
     render::initGl();
-    glutDisplayFunc(display);
-    glutReshapeFunc(reshape);
+    
     #ifndef PSP
+        glutDisplayFunc(render::display);
+        glutReshapeFunc(render::reshape);
         glutSpecialFunc(specialKeyDown);
         glutSpecialUpFunc(specialKeyUp);
         timer(0);
-    #endif
-    glutMainLoop();
+        glutMainLoop();
+    #else
+        SceUID id = sceKernelCreateThread("apov_key", key, 0x10, 0x1000, 0, 0);
+        if (id >= 0){
+            sceKernelStartThread(id, 0, 0);
+        }
+        
+        while(1) {
+            render::reshape(480, 272);
+            render::move(0, false);
+            render::rotate(0, false);
+            render::display();
+        }
+    #endif 
     return 0;
 }

@@ -25,9 +25,11 @@ Then, run the navigator with:
 ./bin/apov-raw-navigator space-size:256 atomic-pov-count:180 ray-step:2 `
     max-ray-depth:128 projection-depth:700 cam-locked filter-gaps-lite
 
+
 ### PSP
 You need to generate your space with:
 ./bin/apov space-size:256 atomic-pov-count:36 \
     ray-step:8 max-ray-depth:256 cam-locked
     
 For other configuration you can change the options via the options file.
+

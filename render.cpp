@@ -187,6 +187,7 @@ namespace render {
         return x;
     }
     
+    static uint64_t loffset = -1;
     #ifndef PSP
         static FILE* f;
         static void openCloseData(bool open) {
@@ -194,9 +195,17 @@ namespace render {
                 f = fopen64("atoms.bin", "r");
             } else fclose(f);
         }
+        static void readFrame(const uint64_t offset) {
+            if(offset != loffset) {
+                fseeko64(f, offset, SEEK_SET);
+                fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
+                loffset = offset;
+            }
+        }
         static void getFrame(const uint64_t offset) {
-            fseeko64(f, offset, SEEK_SET);
-            fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
+            openCloseData(1);
+            readFrame(offset);
+            openCloseData(0);
         }
     #else   
         static SceUID f;
@@ -205,16 +214,23 @@ namespace render {
                 f = sceIoOpen("atoms.bin", PSP_O_RDONLY, 0777);
             } else sceIoClose(f);
         }
-        static void getFrame(const uint64_t offset) {
-            sceIoLseek(f, offset, SEEK_SET);
-            sceIoRead(f, view, WIN_PIXELS_COUNT * sizeof(u32));
+        static void readFrame(const uint64_t offset) {
+            if(offset != loffset) {
+                sceIoLseek(f, offset, SEEK_SET);
+                sceIoRead(f, view, WIN_PIXELS_COUNT * sizeof(u32));
+                loffset = offset;
+            }
         }
     #endif
     
     static void getView() {
         // Fake stream
-        getFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
-        
+        #ifndef PSP
+            getFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
+        #else
+            readFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
+        #endif
+            
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         memset(zvalues, 0x00, WIN_PIXELS_COUNT);
         
@@ -292,7 +308,7 @@ namespace render {
         
         printf("Read first frame...\n");
         openCloseData(true);
-        getFrame(0);
+        readFrame(0);
         openCloseData(false);
         
         printf("First frame contains...");

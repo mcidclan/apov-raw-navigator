@@ -164,7 +164,6 @@ namespace render {
     }
     
     static void filterGaps(const u8 pass) {
-        memset(fbuff, 0x00, WIN_BYTES_COUNT);
         u8 p = pass;
         while(p--) {
             int x = WIN_WIDTH - 1;
@@ -265,9 +264,6 @@ namespace render {
         #else
             readFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
         #endif
-            
-        memset(pixels, 0x00, WIN_BYTES_COUNT);
-        memset(zvalues, 0x00, WIN_PIXELS_COUNT);
         
         int x = WIN_WIDTH;
         while(x--) {
@@ -309,10 +305,15 @@ namespace render {
     }
     
     void display() {
+        memset(fbuff, 0x00, WIN_BYTES_COUNT);
+        memset(pixels, 0x00, WIN_BYTES_COUNT);
+        memset(zvalues, 0x00, WIN_PIXELS_COUNT);
+        
         getView();
         if(Options::FILTER_GAPS) {
             filterGaps(1);
         }
+        
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);

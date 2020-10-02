@@ -74,8 +74,8 @@ namespace render {
 
     static void initSurface() {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        pixels = (u8*)malloc(WIN_BYTES_COUNT);
-        fbuff = (u8*)malloc(WIN_BYTES_COUNT);
+        pixels = new u8[WIN_BYTES_COUNT];
+        fbuff = new u8[WIN_BYTES_COUNT];
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         
         glGenTextures(1, &texture);

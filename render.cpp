@@ -73,7 +73,7 @@ namespace render {
     }
 
     static void initSurface() {
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         pixels = (u8*)malloc(WIN_BYTES_COUNT);
         fbuff = (u8*)malloc(WIN_BYTES_COUNT);
         memset(pixels, 0x00, WIN_BYTES_COUNT);
@@ -105,6 +105,8 @@ namespace render {
 
     void initGl() {
         glEnable(GL_CULL_FACE);
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         initSurface();
     }
@@ -114,7 +116,7 @@ namespace render {
         const u8 pb[3] = {pixels[p[1] + 0], pixels[p[1] + 1], pixels[p[1] + 2]};
         const u8 pc[3] = {pixels[p[2] + 0], pixels[p[2] + 1], pixels[p[2] + 2]};
         const u8 pd[3] = {pixels[p[3] + 0], pixels[p[3] + 1], pixels[p[3] + 2]};
-        u8* const pe[3] = {&fbuff[p[4] + 0], &fbuff[p[4] + 1], &fbuff[p[4] + 2]};
+        const u8 pe[3] = {pixels[p[4] + 0], pixels[p[4] + 1], pixels[p[4] + 2]};
         const u8 pf[3] = {pixels[p[5] + 0], pixels[p[5] + 1], pixels[p[5] + 2]};
         const u8 pg[3] = {pixels[p[6] + 0], pixels[p[6] + 1], pixels[p[6] + 2]};
         const u8 ph[3] = {pixels[p[7] + 0], pixels[p[7] + 1], pixels[p[7] + 2]};
@@ -124,7 +126,7 @@ namespace render {
         const u8 b = (pb[0] | pb[1] | pb[2]) ? 1 : 0;
         const u8 c = (pc[0] | pc[1] | pc[2]) ? 1 : 0;
         const u8 d = (pd[0] | pd[1] | pd[2]) ? 1 : 0;
-        const u8 e = (*pe[0] | *pe[1] | *pe[2]) ? 1 : 0;
+        const u8 e = (pe[0] | pe[1] | pe[2]) ? 1 : 0;
         const u8 f = (pf[0] | pf[1] | pf[2]) ? 1 : 0;
         const u8 g = (pg[0] | pg[1] | pg[2]) ? 1 : 0;
         const u8 h = (ph[0] | ph[1] | ph[2]) ? 1 : 0;
@@ -132,30 +134,32 @@ namespace render {
                 
         if((a || b || c || d) && !e && (f || g || h || i)) {
             const u8 n = a + b + c + d + f  + g + h + i;
-            *pe[0] = (pa[0] + pb[0] + pc[0] + pd[0] + pf[0] + pg[0] + ph[0] + pi[0]) / n;
-            *pe[1] = (pa[1] + pb[1] + pc[1] + pd[1] + pf[1] + pg[1] + ph[1] + pi[1]) / n;
-            *pe[2] = (pa[2] + pb[2] + pc[2] + pd[2] + pf[2] + pg[2] + ph[2] + pi[2]) / n;
+            fbuff[p[4] + 0] = (pa[0] + pb[0] + pc[0] + pd[0] + pf[0] + pg[0] + ph[0] + pi[0]) / n;
+            fbuff[p[4] + 1] = (pa[1] + pb[1] + pc[1] + pd[1] + pf[1] + pg[1] + ph[1] + pi[1]) / n;
+            fbuff[p[4] + 2] = (pa[2] + pb[2] + pc[2] + pd[2] + pf[2] + pg[2] + ph[2] + pi[2]) / n;
+            fbuff[p[4] + 3] = 0xFF;
         }
     }
 
     static void filterGapLite(const u32* const p) {
         const u8 pc[3] = {pixels[p[0] + 0], pixels[p[0] + 1], pixels[p[0] + 2]};
         const u8 pd[3] = {pixels[p[1] + 0], pixels[p[1] + 1], pixels[p[1] + 2]};
-        u8* const pe[3] = {&fbuff[p[2] + 0], &fbuff[p[2] + 1], &fbuff[p[2] + 2]};
+        const u8 pe[3] = {pixels[p[2] + 0], pixels[p[2] + 1], pixels[p[2] + 2]};
         const u8 pf[3] = {pixels[p[3] + 0], pixels[p[3] + 1], pixels[p[3] + 2]};
         const u8 pg[3] = {pixels[p[4] + 0], pixels[p[4] + 1], pixels[p[4] + 2]};
         
         const u8 c = (pc[0] | pc[1] | pc[2]) ? 1 : 0;
         const u8 d = (pd[0] | pd[1] | pd[2]) ? 1 : 0;
-        const u8 e = (*pe[0] | *pe[1] | *pe[2]) ? 1 : 0;
+        const u8 e = (pe[0] | pe[1] | pe[2]) ? 1 : 0;
         const u8 f = (pf[0] | pf[1] | pf[2]) ? 1 : 0;
         const u8 g = (pg[0] | pg[1] | pg[2]) ? 1 : 0;
                 
         if((c || d) && !e && (f || g)) {
             const u8 n = c + d + f  + g;
-            *pe[0] = (pc[0] + pd[0] + pf[0] + pg[0]) / n;
-            *pe[1] = (pc[1] + pd[1] + pf[1] + pg[1]) / n;
-            *pe[2] = (pc[2] + pd[2] + pf[2] + pg[2]) / n;
+            fbuff[p[2] + 0] = (pc[0] + pd[0] + pf[0] + pg[0]) / n;
+            fbuff[p[2] + 1] = (pc[1] + pd[1] + pf[1] + pg[1]) / n;
+            fbuff[p[2] + 2] = (pc[2] + pd[2] + pf[2] + pg[2]) / n;
+            fbuff[p[2] + 3] = 0xFF;
         }
     }
     

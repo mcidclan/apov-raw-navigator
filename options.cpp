@@ -46,15 +46,14 @@ void Options::init(int argc, char **argv) {
             i++;
         }
     #else
-        // ToDo: To be loaded from atom.bin header
         Options::SPACE_SIZE = 256;
-        Options::ATOMIC_POV_COUNT = 90;
-        Options::RAY_STEP = 4;
-        Options::MAX_RAY_DEPTH = 192;
+        Options::ATOMIC_POV_COUNT = 36;
+        Options::RAY_STEP = 8;
+        Options::MAX_RAY_DEPTH = 256;
         Options::CAM_HEMISPHERE = false;
         Options::CAM_LOCKED = true;
         Options::SMOOTH_PIXELS = false;
-        Options::FILTER_GAPS_LITE = true;
+        Options::FILTER_GAPS_LITE = false;
         Options::FILTER_GAPS = true;
         Options::MAX_PROJECTION_DEPTH = 700.0f;
     #endif

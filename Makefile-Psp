@@ -13,8 +13,8 @@ CXXFLAGS = $(CFLAGS) -fno-rtti -std=c++11
 
 PSPBIN = $(PSPSDK)/../bin
 
-LIBS +=  -lglut -lGLU -lGL \
-	-lpsplibc -lz -lm -lpspvfpu -lpsprtc -lpsppower -lstdc++
+LIBS +=  -lglut -lGLU -lGL -lc \
+    -lz -lm -lpspvfpu -lpsprtc -lpsppower -lstdc++
 
 LDFLAGS += ./psp/backthreads.c
 

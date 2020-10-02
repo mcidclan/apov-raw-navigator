@@ -12,6 +12,7 @@ u32 Options::MAX_RAY_DEPTH = 64;
 bool Options::CAM_HEMISPHERE = false;
 bool Options::CAM_LOCKED = false;
 bool Options::SMOOTH_PIXELS = false;
+bool Options::FILTER_GAPS = false;
 float Options::MAX_PROJECTION_DEPTH = 300.0f;
 
 void Options::init(int argc, char **argv) {
@@ -35,15 +36,18 @@ void Options::init(int argc, char **argv) {
                 Options::CAM_LOCKED = true;
             } else if(name.find("smooth-pixels") == 0) {
                 Options::SMOOTH_PIXELS = true;
+            } else if(name.find("filter-gaps") == 0) {
+                Options::FILTER_GAPS = true;
             }
             i++;
         }
     #else
-        // ToDo: To be loaded from options.cnf
+        // ToDo: To be loaded from atom.bin header
+        Options::FILTER_GAPS = false;
         Options::SPACE_SIZE = 256;
-        Options::ATOMIC_POV_COUNT = 90;//180;
-        Options::RAY_STEP = 4; //2;
-        Options::MAX_RAY_DEPTH = 192;//128;
+        Options::ATOMIC_POV_COUNT = 90;
+        Options::RAY_STEP = 4;
+        Options::MAX_RAY_DEPTH = 192;
         Options::CAM_HEMISPHERE = false;
         Options::CAM_LOCKED = true;
         Options::SMOOTH_PIXELS = false;

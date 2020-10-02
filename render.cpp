@@ -187,12 +187,33 @@ namespace render {
         return x;
     }
     
+    #ifndef PSP
+        static FILE* f;
+        static void openCloseData(bool open) {
+            if(open) {
+                f = fopen64("atoms.bin", "r");
+            } else fclose(f);
+        }
+        static void getFrame(const uint64_t offset) {
+            fseeko64(f, offset, SEEK_SET);
+            fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
+        }
+    #else   
+        static SceUID f;
+        static void openCloseData(bool open) {
+            if(open) {
+                f = sceIoOpen("atoms.bin", PSP_O_RDONLY, 0777);
+            } else sceIoClose(f);
+        }
+        static void getFrame(const uint64_t offset) {
+            sceIoLseek(f, offset, SEEK_SET);
+            sceIoRead(f, view, WIN_PIXELS_COUNT * sizeof(u32));
+        }
+    #endif
+    
     static void getView() {
         // Fake stream
-        FILE* f = fopen64("atoms.bin", "r");
-        fseeko64(f, VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate, SEEK_SET);
-        fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
-        fclose(f);
+        getFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
         
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         memset(zvalues, 0x00, WIN_PIXELS_COUNT);
@@ -238,7 +259,9 @@ namespace render {
     
     void display() {
         getView();
-        filterGaps(1);
+        if(Options::FILTER_GAPS) {
+            filterGaps(1);
+        }
         glClear(GL_COLOR_BUFFER_BIT);
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
@@ -250,8 +273,9 @@ namespace render {
         glCallList(surface);
         glutSwapBuffers();
     }
-    
+        
     void init() {
+        printf("Init...\n");
         ATOMIC_POV_STEP = 360.0f / Options::ATOMIC_POV_COUNT;
         WIN_WIDTH = WIN_HEIGHT = Options::SPACE_SIZE;
         WIN_WIDTH_D2 = WIN_WIDTH / 2;
@@ -264,6 +288,23 @@ namespace render {
         
         view = new u32[WIN_PIXELS_COUNT];
         zvalues = new u8[WIN_PIXELS_COUNT];
-        memset(view, 0x00, sizeof(u32)*WIN_PIXELS_COUNT);
+        memset(view, 0x00, sizeof(u32) * WIN_PIXELS_COUNT);
+        
+        printf("Read first frame...\n");
+        openCloseData(true);
+        getFrame(0);
+        openCloseData(false);
+        
+        printf("First frame contains...");
+        u32 nvoxel = 0;
+        u32 i = WIN_PIXELS_COUNT;
+        while(i--) {
+            nvoxel +=  view[i] ? 1 : 0;
+        }
+        
+        printf(" %u voxels.\n", nvoxel);
+        sleep(1);
+        
+        openCloseData(true);
     }
 }

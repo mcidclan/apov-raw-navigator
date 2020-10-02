@@ -4,25 +4,28 @@
  */
 
 #ifndef OPTIONS_HPP
-#define OPTIONS_HPP    
+#define OPTIONS_HPP
+    
+    #include <cmath>
+    #include <cstdio>
+    #include <cstdlib>
+    #include <cstring>
+    #include <string>
+    #include <unistd.h>
+    
     #ifdef PSP
         #include <GL/glut.h>
         #include <pspkernel.h>
         #include <pspctrl.h>
         #include <psppower.h>
-        #include <libc/stdio.h>
+        #include <pspdisplay.h>     
         #define M_PI 3.14159265358979323846
+        #define printf pspDebugScreenPrintf
     #else
         #include <GL/freeglut.h>
-        #include <cstdio>
     #endif
     
-    #include <cmath>
-    #include <cstdlib>
-    #include <cstring>
-    #include <string>
-    
-        // Types
+    // Types
     #define u32 unsigned int
     #define u16 short u32
     #define u8 unsigned char
@@ -33,10 +36,11 @@
         static int ATOMIC_POV_COUNT;
         static int RAY_STEP;
         static u32 MAX_RAY_DEPTH;
-        static float MAX_PROJECTION_DEPTH;
         static bool CAM_LOCKED;
         static bool CAM_HEMISPHERE;
         static bool SMOOTH_PIXELS;
+        static bool FILTER_GAPS;
+        static float MAX_PROJECTION_DEPTH;
         //
         static void init(int argc, char **argv);
     };

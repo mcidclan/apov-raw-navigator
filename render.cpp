@@ -279,7 +279,7 @@ namespace render {
                 const int _y = (y - WIN_HEIGHT_D2) * s;
                 
                 if(_x >= -WIN_WIDTH_D2 && _x < WIN_WIDTH_D2 && _y >= -WIN_HEIGHT_D2 && _y < WIN_HEIGHT_D2) {
-                    const u32 pstep = ((_x + WIN_WIDTH_D2) + ((_y + WIN_HEIGHT_D2) * WIN_WIDTH));
+                    const u32 pstep = ((_x + WIN_WIDTH_D2 - 2) + ((_y + WIN_HEIGHT_D2 - 2) * WIN_WIDTH));
                     const u32 poffset = pstep * COLOR_BYTES_COUNT;
                     
                     u32* const px = (u32*)&pixels[poffset];

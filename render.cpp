@@ -2,6 +2,7 @@
 
 namespace render {
     static const float RAD_ANGLE = M_PI / 180.0f;
+    static const float PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
     
     static u16 WIN_WIDTH;
     static u16 WIN_HEIGHT;
@@ -18,7 +19,6 @@ namespace render {
     static int _rotate = 0;
     static int moveStep = 0;
     static int rotateStep = 0;
-    
     static u32* view;
     static u8* fbuff;
     static u8* pixels;
@@ -271,8 +271,9 @@ namespace render {
             while(y--) {
                 const u32 step = x + y * WIN_WIDTH;
                 
-                const u8 depth = (u8)(view[step] & 0x000000FF);
-                const float s = 1.0f - (float)depth / Options::MAX_PROJECTION_DEPTH;
+                const u32 _view = view[step];
+                const u8 depth = (u8)(_view & 0x000000FF);
+                const float s = 1.0f - ((float)depth * PROJECTION_FACTOR);
                 const int _x = translateX((x - WIN_WIDTH_D2) * s);
                 const int _y = (y - WIN_HEIGHT_D2) * s;
                 
@@ -280,23 +281,11 @@ namespace render {
                     const u32 pstep = ((_x + WIN_WIDTH_D2) + ((_y + WIN_HEIGHT_D2) * WIN_WIDTH));
                     const u32 poffset = pstep * COLOR_BYTES_COUNT;
                     
-                    u8* const px0 = &pixels[poffset + 0];
-                    u8* const px1 = &pixels[poffset + 1];
-                    u8* const px2 = &pixels[poffset + 2];
-                    u8* const px3 = &pixels[poffset + 3];
+                    u32* const px = (u32*)&pixels[poffset];
                     
-                    const u8 v0 = (view[step] & 0xFF000000) >> 24;
-                    const u8 v1 = (view[step] & 0x00FF0000) >> 16;
-                    const u8 v2 = (view[step] & 0x0000FF00) >> 8;
-
-                    if(
-                        (v0 != 0 || v1 != 0 || v2 != 0) &&
-                        ((*px0 == 0 && *px1 == 0 && *px2 == 0) || (depth < zvalues[pstep]))
-                    ) {
-                        *px0 = v0;
-                        *px1 = v1;
-                        *px2 = v2;
-                        *px3 = 0xFF;
+                    if(_view && (!*px || (depth < zvalues[pstep]))) {
+                        *px = 0xFF000000 | (_view & 0xFF000000) >> 24 |
+                        (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
                         zvalues[pstep] = depth;
                     }
                 }

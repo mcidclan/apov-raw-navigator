@@ -2,7 +2,8 @@
 
 namespace render {
     static const float RAD_ANGLE = M_PI / 180.0f;
-    static float PROJECTION_FACTOR;// = 1.0f / Options::MAX_PROJECTION_DEPTH;
+    static float PROJECTION_FACTOR;
+    static int LAST_POSITION;
     
     static u16 WIN_WIDTH;
     static u16 WIN_HEIGHT;
@@ -14,7 +15,7 @@ namespace render {
     static u32 VIEW_BYTES_COUNT;
     static uint64_t SPACE_BYTES_COUNT;
     static float ATOMIC_POV_STEP;
-    // Todo
+    
     static int _move = 0;
     static int _rotate = 0;
     static int moveStep = 0;
@@ -55,8 +56,8 @@ namespace render {
             if(_move < 0) {
                 _move = 0;
             }
-            if(_move > (Options::SPACE_SIZE / Options::RAY_STEP) - 1) {
-                _move = (Options::SPACE_SIZE / Options::RAY_STEP) - 1;
+            if(_move > LAST_POSITION) {
+                _move = LAST_POSITION;
             }
         }
     }
@@ -317,6 +318,7 @@ namespace render {
         
     void init() {
         printf("Init...\n");
+        LAST_POSITION = (Options::SPACE_SIZE / Options::RAY_STEP) - 1;
         PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
         ATOMIC_POV_STEP = 360.0f / Options::ATOMIC_POV_COUNT;
         WIN_WIDTH = WIN_HEIGHT = Options::SPACE_SIZE;
@@ -326,7 +328,7 @@ namespace render {
         WIN_PIXELS_COUNT = WIN_WIDTH * WIN_HEIGHT;
         WIN_BYTES_COUNT = WIN_PIXELS_COUNT * COLOR_BYTES_COUNT;
         VIEW_BYTES_COUNT = WIN_PIXELS_COUNT * sizeof(u32);
-        SPACE_BYTES_COUNT = (Options::SPACE_SIZE / Options::RAY_STEP) * VIEW_BYTES_COUNT;        
+        SPACE_BYTES_COUNT = (Options::SPACE_SIZE / Options::RAY_STEP) * VIEW_BYTES_COUNT;
         
         view = new u32[WIN_PIXELS_COUNT];
         zvalues = new u8[WIN_PIXELS_COUNT];

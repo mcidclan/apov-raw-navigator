@@ -35,7 +35,6 @@
         static int SPACE_SIZE;
         static int ATOMIC_POV_COUNT;
         static int RAY_STEP;
-        static u32 MAX_RAY_DEPTH;
         static bool CAM_LOCKED;
         static bool CAM_HEMISPHERE;
         static bool SMOOTH_PIXELS;

@@ -2,7 +2,7 @@
 
 namespace render {
     static const float RAD_ANGLE = M_PI / 180.0f;
-    static const float PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
+    static float PROJECTION_FACTOR;// = 1.0f / Options::MAX_PROJECTION_DEPTH;
     
     static u16 WIN_WIDTH;
     static u16 WIN_HEIGHT;
@@ -317,6 +317,7 @@ namespace render {
         
     void init() {
         printf("Init...\n");
+        PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
         ATOMIC_POV_STEP = 360.0f / Options::ATOMIC_POV_COUNT;
         WIN_WIDTH = WIN_HEIGHT = Options::SPACE_SIZE;
         WIN_WIDTH_D2 = WIN_WIDTH / 2;

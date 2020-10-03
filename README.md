@@ -8,7 +8,6 @@ Basic Atomic Point of View Raw Navigator.
 space-size ............. Size of the space on i,j,k
 atomic-pov-count ....... Number of point of views (step angles) on the y axis
 ray-step ............... Number of step that increase the ray from its origin
-max-ray-depth .......... Maximun length the ray can while raytracing
 cam-hemisphere ......... Renders only the first hemisphere of view
 cam-locked ............. Simulates a locked camera around the object
 filter-gaps-lite ....... Lite gaps filter
@@ -23,7 +22,7 @@ As an example, you can generate your space with the following:
     
 Then, run the navigator with:
 ./bin/apov-raw-navigator space-size:256 atomic-pov-count:180 ray-step:2 `
-    max-ray-depth:128 projection-depth:700 cam-locked filter-gaps-lite
+    max-ray-depth:128 projection-depth:800 cam-locked filter-gaps-lite
 
 
 ### PSP

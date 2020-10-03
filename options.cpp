@@ -8,7 +8,6 @@
 int Options::SPACE_SIZE = 128;
 int Options::ATOMIC_POV_COUNT = 360;
 int Options::RAY_STEP = 1;
-u32 Options::MAX_RAY_DEPTH = 64;
 bool Options::CAM_HEMISPHERE = false;
 bool Options::CAM_LOCKED = false;
 bool Options::SMOOTH_PIXELS = false;
@@ -27,8 +26,6 @@ void Options::init(int argc, char **argv) {
                 Options::ATOMIC_POV_COUNT = std::stoi(name.substr(17));
             } else if(name.find("ray-step:") == 0) {
                 Options::RAY_STEP = std::stoi(name.substr(9));
-            } else if(name.find("max-ray-depth:") == 0) {
-                Options::MAX_RAY_DEPTH = std::stoi(name.substr(14));
             } else if(name.find("projection-depth:") == 0) {
                 Options::MAX_PROJECTION_DEPTH = (float)std::stoi(name.substr(17));
             } else if(name.find("cam-hemisphere") == 0) {
@@ -49,13 +46,12 @@ void Options::init(int argc, char **argv) {
         Options::SPACE_SIZE = 256;
         Options::ATOMIC_POV_COUNT = 36;
         Options::RAY_STEP = 8;
-        Options::MAX_RAY_DEPTH = 256;
         Options::CAM_HEMISPHERE = false;
         Options::CAM_LOCKED = true;
         Options::SMOOTH_PIXELS = false;
         Options::FILTER_GAPS_LITE = false;
         Options::FILTER_GAPS = true;
-        Options::MAX_PROJECTION_DEPTH = 700.0f;
+        Options::MAX_PROJECTION_DEPTH = 800.0f;
     #endif
 
     if(Options::CAM_HEMISPHERE) {

@@ -14,6 +14,8 @@ filter-gaps-lite ....... Lite gaps filter
 filter-gaps ............ Stronger gaps filter
 max-projection-depth ... Max projection depth
 
+To disable the realtime projection, do not specify max-projection-depth or set
+it to 0 in the command line.
 
 ### Mingw and linux
 As an example, you can generate your space with the following:

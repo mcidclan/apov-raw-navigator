@@ -27,6 +27,35 @@ namespace render {
     static GLuint surface;
     static GLuint texture;
     
+    // Pre-calculation Processes for realtime projection
+    typedef struct {
+        int x, y;
+    } Coords;
+
+    static float _FACTORS[255] = {0.0f};
+    static Coords* _COORDINATES;
+
+    void preCalculate() {
+        _COORDINATES = new Coords[WIN_PIXELS_COUNT];
+        
+        u8 depth = 255;
+        while(depth--) {
+            _FACTORS[depth] = 1.0f - ((float)depth * PROJECTION_FACTOR);
+        }
+        
+        u16 x = WIN_WIDTH;
+        while(x--) {
+            u16 y = WIN_HEIGHT;
+            while(y--) {
+                const u32 i = x + y * WIN_WIDTH;
+                _COORDINATES[i].x = x - WIN_WIDTH_D2;
+                _COORDINATES[i].y = y - WIN_HEIGHT_D2;
+            }
+        }
+    }
+    //
+    
+    
     int _win_width() {
         return WIN_WIDTH;
     }
@@ -259,29 +288,25 @@ namespace render {
     #endif
     
     static void drawProjectedPixels() {
-        int x = WIN_WIDTH;
-        while(x--) {
-            int y = WIN_HEIGHT;
-            while(y--) {
-                const u32 step = x + y * WIN_WIDTH;
-                const u32 _view = view[step];
-                if(_view) {
-                    const u8 depth = (u8)(_view & 0x000000FF);
-                    const float s = 1.0f - ((float)depth * PROJECTION_FACTOR);
-                    const int _x = translateX((x - WIN_WIDTH_D2) * s);
-                    const int _y = (y - WIN_HEIGHT_D2) * s;
+        u32 i = WIN_PIXELS_COUNT;
+        while(i--) {
+            const u32 _view = view[i];
+            if(_view) {
+                const u8 depth = (u8)(_view & 0x000000FF);
+                const float s = _FACTORS[depth];
+                const int _x = translateX(_COORDINATES[i].x * s);
+                const int _y = _COORDINATES[i].y * s;
+                
+                if(_x >= -WIN_WIDTH_D2 && _x < WIN_WIDTH_D2 && _y >= -WIN_HEIGHT_D2 && _y < WIN_HEIGHT_D2) {
+                    const u32 pstep = ((_x + WIN_WIDTH_D2 - 2) + ((_y + WIN_HEIGHT_D2 - 2) * WIN_WIDTH));
+                    const u32 poffset = pstep * COLOR_BYTES_COUNT;
                     
-                    if(_x >= -WIN_WIDTH_D2 && _x < WIN_WIDTH_D2 && _y >= -WIN_HEIGHT_D2 && _y < WIN_HEIGHT_D2) {
-                        const u32 pstep = ((_x + WIN_WIDTH_D2 - 2) + ((_y + WIN_HEIGHT_D2 - 2) * WIN_WIDTH));
-                        const u32 poffset = pstep * COLOR_BYTES_COUNT;
-                        
-                        u32* const px = (u32*)&pixels[poffset];
-                        
-                        if(_view && (!*px || (depth < zvalues[pstep]))) {
-                            *px = 0xFF000000 | (_view & 0xFF000000) >> 24 |
-                            (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
-                            zvalues[pstep] = depth;
-                        }
+                    u32* const px = (u32*)&pixels[poffset];
+                    
+                    if(_view && (!*px || (depth < zvalues[pstep]))) {
+                        *px = 0xFF000000 | (_view & 0xFF000000) >> 24 |
+                        (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
+                        zvalues[pstep] = depth;
                     }
                 }
             }
@@ -335,7 +360,7 @@ namespace render {
         glCallList(surface);
         glutSwapBuffers();
     }
-        
+    
     void init() {
         printf("Init...\n");
         LAST_POSITION = (Options::SPACE_SIZE / Options::RAY_STEP) - 1;
@@ -353,6 +378,11 @@ namespace render {
         view = new u32[WIN_PIXELS_COUNT];
         zvalues = new u8[WIN_PIXELS_COUNT];
         memset(view, 0x00, sizeof(u32) * WIN_PIXELS_COUNT);
+        
+        if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
+            printf("Pre-calculations for projection...\n");
+            preCalculate();
+        }
         
         printf("Read first frame...\n");
         openCloseData(true);
@@ -372,3 +402,7 @@ namespace render {
         openCloseData(true);
     }
 }
+
+//delete [] view
+//delete [] zvalues
+//delete [] _COORDINATES

@@ -258,6 +258,47 @@ namespace render {
         }
     #endif
     
+    static void drawProjectedPixels() {
+        int x = WIN_WIDTH;
+        while(x--) {
+            int y = WIN_HEIGHT;
+            while(y--) {
+                const u32 step = x + y * WIN_WIDTH;
+                const u32 _view = view[step];
+                if(_view) {
+                    const u8 depth = (u8)(_view & 0x000000FF);
+                    const float s = 1.0f - ((float)depth * PROJECTION_FACTOR);
+                    const int _x = translateX((x - WIN_WIDTH_D2) * s);
+                    const int _y = (y - WIN_HEIGHT_D2) * s;
+                    
+                    if(_x >= -WIN_WIDTH_D2 && _x < WIN_WIDTH_D2 && _y >= -WIN_HEIGHT_D2 && _y < WIN_HEIGHT_D2) {
+                        const u32 pstep = ((_x + WIN_WIDTH_D2 - 2) + ((_y + WIN_HEIGHT_D2 - 2) * WIN_WIDTH));
+                        const u32 poffset = pstep * COLOR_BYTES_COUNT;
+                        
+                        u32* const px = (u32*)&pixels[poffset];
+                        
+                        if(_view && (!*px || (depth < zvalues[pstep]))) {
+                            *px = 0xFF000000 | (_view & 0xFF000000) >> 24 |
+                            (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
+                            zvalues[pstep] = depth;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    static void drawPixels() {
+        u32 i = WIN_PIXELS_COUNT;
+        while(i--) {
+            const u32 _view = view[i];
+            if(_view) {
+                *((u32*)&pixels[i*4]) = 0xFF000000 | (_view & 0xFF000000) >> 24 |
+                    (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
+            }
+        }
+    }
+    
     static void getView() {
         // Fake stream
         #ifndef PSP
@@ -266,31 +307,10 @@ namespace render {
             readFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
         #endif
         
-        int x = WIN_WIDTH;
-        while(x--) {
-            int y = WIN_HEIGHT;
-            while(y--) {
-                const u32 step = x + y * WIN_WIDTH;
-                
-                const u32 _view = view[step];
-                const u8 depth = (u8)(_view & 0x000000FF);
-                const float s = 1.0f - ((float)depth * PROJECTION_FACTOR);
-                const int _x = translateX((x - WIN_WIDTH_D2) * s);
-                const int _y = (y - WIN_HEIGHT_D2) * s;
-                
-                if(_x >= -WIN_WIDTH_D2 && _x < WIN_WIDTH_D2 && _y >= -WIN_HEIGHT_D2 && _y < WIN_HEIGHT_D2) {
-                    const u32 pstep = ((_x + WIN_WIDTH_D2 - 2) + ((_y + WIN_HEIGHT_D2 - 2) * WIN_WIDTH));
-                    const u32 poffset = pstep * COLOR_BYTES_COUNT;
-                    
-                    u32* const px = (u32*)&pixels[poffset];
-                    
-                    if(_view && (!*px || (depth < zvalues[pstep]))) {
-                        *px = 0xFF000000 | (_view & 0xFF000000) >> 24 |
-                        (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
-                        zvalues[pstep] = depth;
-                    }
-                }
-            }
+        if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
+            drawProjectedPixels();
+        } else {
+            drawPixels();
         }
     }
     

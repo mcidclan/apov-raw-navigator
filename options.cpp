@@ -13,7 +13,7 @@ bool Options::CAM_LOCKED = false;
 bool Options::SMOOTH_PIXELS = false;
 bool Options::FILTER_GAPS = false;
 bool Options::FILTER_GAPS_LITE = false;
-float Options::MAX_PROJECTION_DEPTH = 300.0f;
+float Options::MAX_PROJECTION_DEPTH = 0.0f;
 
 void Options::init(int argc, char **argv) {
     #ifndef PSP

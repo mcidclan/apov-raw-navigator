@@ -364,7 +364,9 @@ namespace render {
     void init() {
         printf("Init...\n");
         LAST_POSITION = (Options::SPACE_SIZE / Options::RAY_STEP) - 1;
-        PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
+        if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
+            PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
+        }
         ATOMIC_POV_STEP = 360.0f / Options::ATOMIC_POV_COUNT;
         WIN_WIDTH = WIN_HEIGHT = Options::SPACE_SIZE;
         WIN_WIDTH_D2 = WIN_WIDTH / 2;

@@ -108,7 +108,7 @@ namespace render {
         fbuff = new u8[WIN_BYTES_COUNT];
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         
-        glGenTextures(1, &texture);
+        glGenTextures(4, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
         if(Options::SMOOTH_PIXELS)
         {
@@ -135,8 +135,6 @@ namespace render {
 
     void initGl() {
         glEnable(GL_CULL_FACE);
-        //glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         initSurface();
     }
@@ -256,7 +254,7 @@ namespace render {
         static FILE* f;
         static void openCloseData(bool open) {
             if(open) {
-                f = fopen64("atoms.bin", "r");
+                f = fopen64("atoms.bin", "rb");
             } else fclose(f);
         }
         static void readFrame(const uint64_t offset) {
@@ -287,7 +285,7 @@ namespace render {
         }
     #endif
     
-    static void drawProjectedPixels() {
+    static void drawPixels() {
         u32 i = WIN_PIXELS_COUNT;
         while(i--) {
             const u32 _view = view[i];
@@ -304,22 +302,10 @@ namespace render {
                     u32* const px = (u32*)&pixels[poffset];
                     
                     if(_view && (!*px || (depth < zvalues[pstep]))) {
-                        *px = 0xFF000000 | (_view & 0xFF000000) >> 24 |
-                        (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
+                        *px = 0xFF000000 | _view;
                         zvalues[pstep] = depth;
                     }
                 }
-            }
-        }
-    }
-    
-    static void drawPixels() {
-        u32 i = WIN_PIXELS_COUNT;
-        while(i--) {
-            const u32 _view = view[i];
-            if(_view) {
-                *((u32*)&pixels[i*4]) = 0xFF000000 | (_view & 0xFF000000) >> 24 |
-                    (_view & 0x00FF0000) >> 8 | (_view & 0x0000FF00) << 8;
             }
         }
     }
@@ -333,9 +319,9 @@ namespace render {
         #endif
         
         if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
-            drawProjectedPixels();
-        } else {
             drawPixels();
+        } else {
+            memcpy(pixels, view, VIEW_BYTES_COUNT);
         }
     }
     
@@ -390,7 +376,7 @@ namespace render {
         openCloseData(true);
         readFrame(0);
         openCloseData(false);
-        
+
         printf("First frame contains...");
         u32 nvoxel = 0;
         u32 i = WIN_PIXELS_COUNT;

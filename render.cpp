@@ -349,7 +349,8 @@ namespace render {
     
     void init() {
         printf("Init...\n");
-        LAST_POSITION = (Options::SPACE_SIZE / Options::RAY_STEP) - 1;
+        const u32 FRAME_COUNT = ((Options::SPACE_SIZE * Options::SPACE_BLOCK_COUNT) / Options::RAY_STEP);
+        LAST_POSITION = FRAME_COUNT - 1;
         if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
             PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
         }
@@ -361,7 +362,7 @@ namespace render {
         WIN_PIXELS_COUNT = WIN_WIDTH * WIN_HEIGHT;
         WIN_BYTES_COUNT = WIN_PIXELS_COUNT * COLOR_BYTES_COUNT;
         VIEW_BYTES_COUNT = WIN_PIXELS_COUNT * sizeof(u32);
-        SPACE_BYTES_COUNT = (Options::SPACE_SIZE / Options::RAY_STEP) * VIEW_BYTES_COUNT;
+        SPACE_BYTES_COUNT = FRAME_COUNT * VIEW_BYTES_COUNT;
         
         view = new u32[WIN_PIXELS_COUNT];
         zvalues = new u8[WIN_PIXELS_COUNT];

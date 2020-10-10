@@ -5,6 +5,7 @@
 
 #include "./headers/Options.hpp"
 
+u8 Options::SPACE_BLOCK_COUNT = 1;
 int Options::SPACE_SIZE = 128;
 int Options::ATOMIC_POV_COUNT = 360;
 int Options::RAY_STEP = 1;
@@ -28,6 +29,8 @@ void Options::init(int argc, char **argv) {
                 Options::RAY_STEP = std::stoi(name.substr(9));
             } else if(name.find("projection-depth:") == 0) {
                 Options::MAX_PROJECTION_DEPTH = (float)std::stoi(name.substr(17));
+            } else if(name.find("space-block-count:") == 0) {
+                Options::SPACE_BLOCK_COUNT = std::stoi(name.substr(18));
             } else if(name.find("cam-hemisphere") == 0) {
                 Options::CAM_HEMISPHERE = true;
             } else if(name.find("cam-locked") == 0) {
@@ -52,6 +55,7 @@ void Options::init(int argc, char **argv) {
         Options::FILTER_GAPS_LITE = false;
         Options::FILTER_GAPS = true;
         Options::MAX_PROJECTION_DEPTH = 800.0f;
+        Options::SPACE_BLOCK_COUNT = 1;
     #endif
 
     if(Options::CAM_HEMISPHERE) {

@@ -32,6 +32,7 @@
 
     class Options {
         public:
+        static u8 SPACE_BLOCK_COUNT;
         static int SPACE_SIZE;
         static int ATOMIC_POV_COUNT;
         static int RAY_STEP;

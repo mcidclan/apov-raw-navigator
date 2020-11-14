@@ -250,40 +250,24 @@ namespace render {
     }
     
     static uint64_t loffset = -1;
-    #ifndef PSP
-        static FILE* f;
-        static void openCloseData(bool open) {
-            if(open) {
-                f = fopen64("atoms.bin", "rb");
-            } else fclose(f);
+    static FILE* f;
+    static void openCloseData(bool open) {
+        if(open) {
+            f = fopen64("atoms.bin", "rb");
+        } else fclose(f);
+    }
+    static void readFrame(const uint64_t offset) {
+        if(offset != loffset) {
+            fseeko64(f, offset, SEEK_SET);
+            fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
+            loffset = offset;
         }
-        static void readFrame(const uint64_t offset) {
-            if(offset != loffset) {
-                fseeko64(f, offset, SEEK_SET);
-                fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
-                loffset = offset;
-            }
-        }
-        static void getFrame(const uint64_t offset) {
-            openCloseData(1);
-            readFrame(offset);
-            openCloseData(0);
-        }
-    #else   
-        static SceUID f;
-        static void openCloseData(bool open) {
-            if(open) {
-                f = sceIoOpen("atoms.bin", PSP_O_RDONLY, 0777);
-            } else sceIoClose(f);
-        }
-        static void readFrame(const uint64_t offset) {
-            if(offset != loffset) {
-                sceIoLseek(f, offset, SEEK_SET);
-                sceIoRead(f, view, WIN_PIXELS_COUNT * sizeof(u32));
-                loffset = offset;
-            }
-        }
-    #endif
+    }
+    static void getFrame(const uint64_t offset) {
+        openCloseData(1);
+        readFrame(offset);
+        openCloseData(0);
+    }
     
     static void drawPixels() {
         u32 i = WIN_PIXELS_COUNT;
@@ -311,13 +295,7 @@ namespace render {
     }
     
     static void getView() {
-        // Fake stream
-        #ifndef PSP
-            getFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
-        #else
-            readFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
-        #endif
-        
+        readFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
         if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
             drawPixels();
         } else {

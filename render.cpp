@@ -1,6 +1,6 @@
 #include "./headers/render.hpp"
 
-namespace render {
+namespace render {    
     static const float RAD_ANGLE = M_PI / 180.0f;
     static float PROJECTION_FACTOR;
     static int LAST_POSITION;
@@ -13,13 +13,13 @@ namespace render {
     static u32 WIN_PIXELS_COUNT;
     static u32 WIN_BYTES_COUNT;
     static u32 VIEW_BYTES_COUNT;
-    static uint64_t SPACE_BYTES_COUNT;
+    static u64 SPACE_BYTES_COUNT;
     static float ATOMIC_POV_STEP;
     
     static int _move = 0;
-    static int _rotate = 0;
-    static int moveStep = 0;
-    static int rotateStep = 0;
+    static int _hrotate = 0;
+    static int _vrotate = 0;
+    
     static u32* view;
     static u8* fbuff;
     static u8* pixels;
@@ -53,8 +53,6 @@ namespace render {
             }
         }
     }
-    //
-    
     
     int _win_width() {
         return WIN_WIDTH;
@@ -64,31 +62,38 @@ namespace render {
         return WIN_HEIGHT;
     }
     
-    void rotate(const int step, bool set) {
-        if(set) {
-            rotateStep = step;
-        } else {
-            _rotate += rotateStep;
-            if(_rotate < 0) {
-                _rotate = Options::ATOMIC_POV_COUNT - 1;
-            } else if(_rotate >= Options::ATOMIC_POV_COUNT) {
-                _rotate = 0;
+    int ajustCursor(const int value, const u8 mode) {
+        if(!mode) {
+            u16 max;
+            if(value < 0) {
+                return 0;
+            } else if(value >= (max = (Options::SPACE_BLOCK_SIZE *
+                Options::DEPTH_BLOCK_COUNT) / Options::RAY_STEP)) {
+                return max - 1;
+            }
+        } else if(mode == 1) {   
+            if(value < 0) {
+                return Options::HORIZONTAL_POV_COUNT - 1;
+            } else if(value >= Options::HORIZONTAL_POV_COUNT) {
+                return 0;
+            }
+        } else if(mode == 2) {   
+            if(value < 0) {
+                return Options::VERTICAL_POV_COUNT - 1;
+            } else if(value >= Options::VERTICAL_POV_COUNT) {
+                return 0;
             }
         }
-    }
+        return value;
+    }    
     
-    void move(const int step, bool set) {
-        if(set) {
-            moveStep = step;
-        } else {
-            _move += moveStep;
-            if(_move < 0) {
-                _move = 0;
-            }
-            if(_move > LAST_POSITION) {
-                _move = LAST_POSITION;
-            }
-        }
+    void controls() {
+        _move += mstep;
+        _hrotate += hstep;
+        _vrotate += vstep;
+        _move = ajustCursor(_move, 0);
+        _hrotate = ajustCursor(_hrotate, 1);
+        _vrotate = ajustCursor(_vrotate, 2);
     }
     
     void reshape(int width, int height) {
@@ -239,7 +244,7 @@ namespace render {
     
     static float translateX(const float x) {
         if(!Options::CAM_LOCKED) {
-            float angle = _rotate * ATOMIC_POV_STEP + 90.0f;
+            float angle = _hrotate * ATOMIC_POV_STEP + 90.0f;
             if(Options::CAM_HEMISPHERE && angle > 90.0f) {
                 angle += 180.0f;
             }
@@ -249,24 +254,20 @@ namespace render {
         return x;
     }
     
-    static uint64_t loffset = -1;
     static FILE* f;
     static void openCloseData(bool open) {
         if(open) {
             f = fopen64("atoms.bin", "rb");
         } else fclose(f);
     }
-    static void readFrame(const uint64_t offset) {
+    
+    static void readFrame(const u64 offset) {
+        static u64 loffset = -1;
         if(offset != loffset) {
             fseeko64(f, offset, SEEK_SET);
             fread(view, sizeof(u32), WIN_PIXELS_COUNT, f);
             loffset = offset;
         }
-    }
-    static void getFrame(const uint64_t offset) {
-        openCloseData(1);
-        readFrame(offset);
-        openCloseData(0);
     }
     
     static void drawPixels() {
@@ -294,8 +295,13 @@ namespace render {
         }
     }
     
+    static u64 getOffset(const int move, const int hrotate, const int vrotate) {
+        return Options::HEADER_SIZE + WIN_BYTES_COUNT * move +
+            (hrotate * Options::VERTICAL_POV_COUNT + vrotate) * SPACE_BYTES_COUNT;
+    }
+    
     static void getView() {
-        readFrame(VIEW_BYTES_COUNT * _move + SPACE_BYTES_COUNT * _rotate);
+        readFrame(getOffset(_move, _hrotate, _vrotate));    
         if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
             drawPixels();
         } else {
@@ -304,6 +310,7 @@ namespace render {
     }
     
     void display() {
+        controls();
         memset(fbuff, 0x00, WIN_BYTES_COUNT);
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         memset(zvalues, 0x00, WIN_PIXELS_COUNT);
@@ -327,13 +334,14 @@ namespace render {
     
     void init() {
         printf("Init...\n");
-        const u32 FRAME_COUNT = ((Options::SPACE_SIZE * Options::SPACE_BLOCK_COUNT) / Options::RAY_STEP);
+        const u32 FRAME_COUNT = ((Options::SPACE_BLOCK_SIZE *
+            Options::SPACE_BLOCK_COUNT) / Options::RAY_STEP);
         LAST_POSITION = FRAME_COUNT - 1;
         if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
             PROJECTION_FACTOR = 1.0f / Options::MAX_PROJECTION_DEPTH;
         }
-        ATOMIC_POV_STEP = 360.0f / Options::ATOMIC_POV_COUNT;
-        WIN_WIDTH = WIN_HEIGHT = Options::SPACE_SIZE;
+        ATOMIC_POV_STEP = 360.0f / Options::HORIZONTAL_POV_COUNT;
+        WIN_WIDTH = WIN_HEIGHT = Options::SPACE_BLOCK_SIZE;
         WIN_WIDTH_D2 = WIN_WIDTH / 2;
         WIN_HEIGHT_D2 = WIN_HEIGHT / 2;
         WIN_WIDTH_D4 = WIN_WIDTH_D2 / 2;
@@ -341,7 +349,7 @@ namespace render {
         WIN_BYTES_COUNT = WIN_PIXELS_COUNT * COLOR_BYTES_COUNT;
         VIEW_BYTES_COUNT = WIN_PIXELS_COUNT * sizeof(u32);
         SPACE_BYTES_COUNT = FRAME_COUNT * VIEW_BYTES_COUNT;
-        
+    
         view = new u32[WIN_PIXELS_COUNT];
         zvalues = new u8[WIN_PIXELS_COUNT];
         memset(view, 0x00, sizeof(u32) * WIN_PIXELS_COUNT);

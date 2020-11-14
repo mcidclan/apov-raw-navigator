@@ -3,13 +3,14 @@
     #include "options.hpp"
     #define COLOR_BYTES_COUNT 4
     namespace render {
+        static int hstep;
+        static int vstep;
+        static int mstep;
         int _win_width();
         int _win_height();
         void init();
         void initGl();
         void display();
         void reshape(int, int);
-        void rotate(const int, bool = true);
-        void move(const int, bool = true);
     }
 #endif

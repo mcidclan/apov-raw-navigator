@@ -5,10 +5,6 @@
 
 #include "./headers/Options.hpp"
 
-u8 Options::SPACE_BLOCK_COUNT = 1;
-int Options::SPACE_SIZE = 128;
-int Options::ATOMIC_POV_COUNT = 360;
-int Options::RAY_STEP = 1;
 bool Options::CAM_HEMISPHERE = false;
 bool Options::CAM_LOCKED = false;
 bool Options::SMOOTH_PIXELS = false;
@@ -16,14 +12,25 @@ bool Options::FILTER_GAPS = false;
 bool Options::FILTER_GAPS_LITE = false;
 float Options::MAX_PROJECTION_DEPTH = 0.0f;
 
+u8 Options::HEADER_SIZE = 0;
+u8 Options::SPACE_BLOCK_COUNT = 1;
+u8 Options::WIDTH_BLOCK_COUNT = 1;
+u8 Options::DEPTH_BLOCK_COUNT = 1;
+u16 Options::SPACE_BLOCK_SIZE = 256;
+u16 Options::RAY_STEP = 1;
+u16 Options::HORIZONTAL_POV_COUNT = 1;
+u16 Options::VERTICAL_POV_COUNT = 1;
+
 void Options::init(int argc, char **argv) {
     int i = 1;
     while(i < argc){
         const std::string name = argv[i];
-        if(name.find("space-size:") == 0) {
-           Options::SPACE_SIZE = std::stoi(name.substr(11)); 
-        } else if(name.find("atomic-pov-count:") == 0) {
-            Options::ATOMIC_POV_COUNT = std::stoi(name.substr(17));
+        if(name.find("space-block-size:") == 0) {
+           Options::SPACE_BLOCK_SIZE = std::stoi(name.substr(17)); 
+        } else if(name.find("horizontal-pov-count:") == 0) {
+            Options::HORIZONTAL_POV_COUNT = std::stoi(name.substr(21));
+        } else if(name.find("vertical-pov-count:") == 0) {
+            Options::VERTICAL_POV_COUNT = std::stoi(name.substr(19));
         } else if(name.find("ray-step:") == 0) {
             Options::RAY_STEP = std::stoi(name.substr(9));
         } else if(name.find("projection-depth:") == 0) {
@@ -45,6 +52,7 @@ void Options::init(int argc, char **argv) {
         i++;
     }
     if(Options::CAM_HEMISPHERE) {
-        Options::ATOMIC_POV_COUNT /= 2;
+        Options::HORIZONTAL_POV_COUNT /= 2;
+        Options::VERTICAL_POV_COUNT /= 2;
     }
 }

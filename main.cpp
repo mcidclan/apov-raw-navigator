@@ -1,42 +1,62 @@
 #include "./headers/render.hpp"
-
+    
 static void specialKeyDown(int key, int x, int y) {
-    switch (key) {
+    switch(key) {
         case GLUT_KEY_DOWN:
-            render::move(-1);
+            render::vstep = 1;
             break;
         case GLUT_KEY_UP:
-            render::move(1);
+            render::vstep = -1;
             break;
         case GLUT_KEY_LEFT:
-            render::rotate(-1);
+            render::hstep = 1;
             break;
         case GLUT_KEY_RIGHT:
-            render::rotate(1);
+            render::hstep = -1;
             break;
     }
 }
 
 static void specialKeyUp(int key, int x, int y) {
-    switch (key) {    
-        case GLUT_KEY_UP:
-            render::move(0);
-            break;
+    switch(key) {    
         case GLUT_KEY_DOWN:
-            render::move(0);
+            render::vstep = 0;
+            break;
+        case GLUT_KEY_UP:
+            render::vstep = 0;    
             break;
         case GLUT_KEY_LEFT:
-            render::rotate(0);
+            render::hstep = 0;
             break;
         case GLUT_KEY_RIGHT:
-            render::rotate(0);
+            render::hstep = 0;
+            break;
+    }
+}
+
+void keyDown(unsigned char key, int x, int y) {
+    switch(key) {
+        case 'z':
+            render::mstep = 1;
+            break;
+        case 's':
+            render::mstep = -1;
+            break;
+    }
+}
+
+void keyUp(unsigned char key, int x, int y) {
+    switch(key) {
+        case 'z':
+            render::mstep = 0;
+            break;
+        case 's':
+            render::mstep = 0;
             break;
     }
 }
 
 static void timer(int value) {
-    render::move(0, false);
-    render::rotate(0, false);
     glutPostRedisplay();
     glutTimerFunc(1000/60, timer, value);
 }
@@ -54,6 +74,8 @@ int main(int argc, char** argv) {
     glutReshapeFunc(render::reshape);
     glutSpecialFunc(specialKeyDown);
     glutSpecialUpFunc(specialKeyUp);
+    glutKeyboardFunc(keyDown);
+    glutKeyboardUpFunc(keyUp);
     timer(0);
     glutMainLoop();
     return 0;

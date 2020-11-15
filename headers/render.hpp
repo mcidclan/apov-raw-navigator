@@ -3,9 +3,9 @@
     #include "options.hpp"
     #define COLOR_BYTES_COUNT 4
     namespace render {
-        static int hstep;
-        static int vstep;
-        static int mstep;
+        extern int hstep;
+        extern int vstep;
+        extern int mstep;
         int _win_width();
         int _win_height();
         void init();

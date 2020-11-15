@@ -1,6 +1,7 @@
 #include "./headers/render.hpp"
 
 namespace render {    
+    int mstep = 0, hstep = 0, vstep = 0;
     static const float RAD_ANGLE = M_PI / 180.0f;
     static float PROJECTION_FACTOR;
     static int LAST_POSITION;
@@ -110,7 +111,9 @@ namespace render {
     static void initSurface() {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         pixels = new u8[WIN_BYTES_COUNT];
-        fbuff = new u8[WIN_BYTES_COUNT];
+        if(Options::FILTER_GAPS) {
+            fbuff = new u8[WIN_BYTES_COUNT];
+        }
         memset(pixels, 0x00, WIN_BYTES_COUNT);
         
         glGenTextures(4, &texture);
@@ -257,7 +260,7 @@ namespace render {
     static FILE* f;
     static void openCloseData(bool open) {
         if(open) {
-            f = fopen64("atoms.bin", "rb");
+            f = fopen64("atoms.apov", "rb");
         } else fclose(f);
     }
     
@@ -311,10 +314,13 @@ namespace render {
     
     void display() {
         controls();
-        memset(fbuff, 0x00, WIN_BYTES_COUNT);
+        if(Options::FILTER_GAPS) {
+            memset(fbuff, 0x00, WIN_BYTES_COUNT);
+        }
         memset(pixels, 0x00, WIN_BYTES_COUNT);
-        memset(zvalues, 0x00, WIN_PIXELS_COUNT);
-        
+        if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
+            memset(zvalues, 0x00, WIN_PIXELS_COUNT);
+        }
         getView();
         if(Options::FILTER_GAPS) {
             filterGaps(1);
@@ -350,8 +356,11 @@ namespace render {
         VIEW_BYTES_COUNT = WIN_PIXELS_COUNT * sizeof(u32);
         SPACE_BYTES_COUNT = FRAME_COUNT * VIEW_BYTES_COUNT;
     
+        
         view = new u32[WIN_PIXELS_COUNT];
-        zvalues = new u8[WIN_PIXELS_COUNT];
+        if(Options::MAX_PROJECTION_DEPTH > 0.0f) {
+            zvalues = new u8[WIN_PIXELS_COUNT];
+        }
         memset(view, 0x00, sizeof(u32) * WIN_PIXELS_COUNT);
         
         if(Options::MAX_PROJECTION_DEPTH > 0.0f) {

@@ -3,17 +3,17 @@ EXE = apov-raw-navigator.exe
 OBJS = options.o main.o render.o
 OBJS := $(addprefix $(BIN), $(OBJS))
 
-CXFLAGS = -g0 -Wpadded -Wpacked -Wall -Ofast -fno-signed-zeros \
+CXFLAGS = -g0 -Wpadded -Wpacked -Wall -m64 -Ofast -fno-signed-zeros \
     -fno-trapping-math -funroll-loops -frename-registers
 LDFLAGS = $(CXFLAGS) -lopengl32 -lfreeglut -lstdc++
 
 all: $(BIN)$(EXE)
 
 $(BIN)$(EXE): $(OBJS)
-	gcc -o $@ $^ $(LDFLAGS)
+	g++ -o $@ $^ $(LDFLAGS)
 
 $(BIN)%.o: %.cpp
-	gcc -o $@ -c $< $(CXFLAGS)
+	g++ -o $@ -c $< $(CXFLAGS)
     
 clean:
 	powershell " Remove-Item ./bin/*.o"
